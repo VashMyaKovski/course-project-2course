@@ -1,0 +1,85 @@
+@startuml 01_er_diagram
+title "ER-диаграмма: Концептуальная модель данных"
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+' === СУЩНОСТИ (как классы со стереотипами) ===
+
+class "SourceDocument" as DOC {
+  +id: UUID <<PK>>
+  +name: VARCHAR(255)
+  +content: TEXT
+  +uploaded_at: TIMESTAMP
+  +source_type: ENUM
+  +author: VARCHAR(255)
+}
+
+class "Chunk" as CHK {
+  +id: UUID <<PK>>
+  +document_id: UUID <<FK>>
+  +chunk_index: INTEGER
+  +text: TEXT
+  +start_offset: INTEGER
+  +end_offset: INTEGER
+}
+
+class "AtomicStatement" as STMT {
+  +id: UUID <<PK>>
+  +original_text: TEXT
+  +decontextualized_text: TEXT
+  +embedding: FLOAT[768]
+  +chunk_id: UUID <<FK>>
+  +created_at: TIMESTAMP
+  +status: ENUM
+}
+
+class "StatementContext" as CTX {
+  +id: UUID <<PK>>
+  +statement_id: UUID <<FK>>
+  +temporal_scope: DATE_RANGE
+  +geographic_scope: VARCHAR(100)
+  +entities: JSON
+}
+
+class "ContradictionPair" as CP {
+  +id: UUID <<PK>>
+  +statement_a_id: UUID <<FK>>
+  +statement_b_id: UUID <<FK>>
+  +nli_relation: ENUM
+  +confidence: FLOAT
+  +model_version: VARCHAR(50)
+  +detected_at: TIMESTAMP
+}
+
+class "FactTopic" as TOPIC {
+  +id: UUID <<PK>>
+  +name: VARCHAR(255)
+  +embedding: FLOAT[768]
+  +keywords: TEXT[]
+}
+
+' === СВЯЗИ ===
+
+DOC ||--o{ CHK : "contains"
+CHK ||--o{ STMT : "extracted_from"
+STMT ||--o| CTX : "has_context"
+STMT }o--o{ CP : "participates_in"
+STMT }|--|| TOPIC : "belongs_to_topic"
+
+' === ПРИМЕЧАНИЯ ===
+
+note right of STMT
+  Атомарное утверждение
+  - original_text: как в чанке
+  - decontextualized_text: после LLM
+  - embedding: вектор для поиска
+end note
+
+note bottom of CP
+  Пара противоречия
+  - Формируется при поиске похожих фактов
+  - Классифицируется NLI-моделью (deBERTa)
+end note
+
+@enduml

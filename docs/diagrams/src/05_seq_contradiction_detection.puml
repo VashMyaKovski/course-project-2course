@@ -1,0 +1,72 @@
+@startuml 05_seq_contradiction_detection
+title "Sequence: Обнаружение фактологических противоречий"
+autonumber
+
+participant "Пользователь" as User
+participant "API Gateway" as API
+participant "Contradiction Detector" as Detector
+participant "Vector KB" as KB
+participant "Vector Store" as VS
+participant "Metadata DB" as DB
+participant "NLI Model" as NLI
+participant "Report Builder" as Builder
+
+User -> API: POST /check-contradictions
+activate API
+
+API -> Detector: find_contradictions(params)
+activate Detector
+
+Detector -> KB: get_statements_by_topic()
+activate KB
+
+KB -> VS: similarity_search(vector, top_k=100)
+activate VS
+VS --> KB: List[CandidateStatement]
+deactivate VS
+
+KB -> DB: FETCH metadata
+activate DB
+DB --> KB: List[EnrichedStatement]
+deactivate DB
+
+KB --> Detector: List[TopicRelatedFacts]
+deactivate KB
+
+Detector -> Detector: select_pairs_for_nli()
+
+loop Для каждой пары фактов
+  Detector -> NLI: classify_pair(premise, hypothesis)
+  activate NLI
+  NLI --> Detector: relation, confidence
+  deactivate NLI
+end
+
+Detector -> Detector: filter_by_confidence(0.75)
+
+Detector -> Builder: generate_report()
+activate Builder
+Builder --> Detector: ContradictionReport
+deactivate Builder
+
+Detector --> API: List[ContradictionPair]
+deactivate Detector
+
+API --> User: 200 OK
+deactivate API
+
+note right of Detector
+  Критерии выбора пар:
+  - Высокая косинусная близость
+  - Противоположные ключевые слова
+  - Одинаковые сущности
+end note
+
+note bottom
+  SLA для детекции:
+  - Поиск кандидатов: < 500 мс
+  - NLI-классификация: < 100 мс/пара
+  - Общий ответ: < 2 сек
+end note
+
+@enduml

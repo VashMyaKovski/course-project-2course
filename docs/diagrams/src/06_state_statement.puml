@@ -1,0 +1,87 @@
+@startuml 06_state_statement
+title "State-диаграмма: Lifecycle атомарного утверждения"
+
+[*] --> RawChunk
+
+state "RawChunk" as RawChunk {
+  note: Текст из документа\nразбитый на сегменты
+}
+
+RawChunk --> Extracting
+
+state "Extracting" as Extracting {
+  note: LLM извлекает атомарные\nутверждения из чанка
+}
+
+Extracting --> Decontextualizing
+Extracting --> Error
+
+state "Decontextualizing" as Decontextualizing {
+  note: LLM заменяет местоимения\nна сущности
+}
+
+Decontextualizing --> Embedding
+Decontextualizing --> Error
+
+state "Embedding" as Embedding {
+  note: Sentence-BERT генерирует\nвекторное представление
+}
+
+Embedding --> Active
+Embedding --> Error
+
+state "Active" as Active {
+  note: Факт доступен для поиска
+}
+
+Active --> PairSelected
+Active --> Deprecated
+
+state "PairSelected" as PairSelected {
+  note: Факт выбран в паре\nдля NLI-классификации
+}
+
+PairSelected --> NLIProcessing
+PairSelected --> Active
+
+state "NLIProcessing" as NLIProcessing {
+  note: deBERTa классифицирует пару
+}
+
+NLIProcessing --> Flagged
+NLIProcessing --> Active
+NLIProcessing --> Error
+
+state "Flagged" as Flagged {
+  note: Подтверждённое противоречие
+}
+
+Flagged --> Archived
+Flagged --> Active
+
+state "Deprecated" as Deprecated {
+  note: Факт устарел по дате
+}
+
+Deprecated --> Archived
+
+state "Error" as Error {
+  note: Ошибка обработки
+}
+
+Error --> Extracting
+Error --> [*]
+
+state "Archived" as Archived {
+  note: Не участвует в поиске
+}
+
+Archived --> [*]
+
+note right of Active
+  Триггеры перехода:
+  - onTopicMatch(): найдены похожие факты
+  - onContradictionDetected(): NLI вернул contradiction
+end note
+
+@enduml
