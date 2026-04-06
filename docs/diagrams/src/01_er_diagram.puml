@@ -1,85 +1,110 @@
-@startuml 01_er_diagram
-title "ER-диаграмма: Концептуальная модель данных"
+@startuml ER_Diagram
+title "ER диаграмма: система поиска фактологических противоречий"
 
-skinparam classAttributeIconSize 0
 skinparam shadowing false
+skinparam monochrome true
+skinparam packageStyle rectangle
 
-' === СУЩНОСТИ (как классы со стереотипами) ===
-
-class "SourceDocument" as DOC {
-  +id: UUID <<PK>>
-  +name: VARCHAR(255)
-  +content: TEXT
-  +uploaded_at: TIMESTAMP
-  +source_type: ENUM
-  +author: VARCHAR(255)
+' === СТИЛИ ===
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+}
+skinparam rectangle {
+  BackgroundColor White
+  BorderColor Black
+}
+skinparam diamond {
+  BackgroundColor White
+  BorderColor Black
 }
 
-class "Chunk" as CHK {
-  +id: UUID <<PK>>
-  +document_id: UUID <<FK>>
-  +chunk_index: INTEGER
-  +text: TEXT
-  +start_offset: INTEGER
-  +end_offset: INTEGER
-}
+' === СУЩНОСТИ ===
+rectangle "SourceDocument" as DOC
+rectangle "Chunk" as CHK
+rectangle "AtomicStatement" as STMT
+rectangle "StatementContext" as CTX
+rectangle "ContradictionPair" as CP
+rectangle "FactTopic" as TOPIC
 
-class "AtomicStatement" as STMT {
-  +id: UUID <<PK>>
-  +original_text: TEXT
-  +decontextualized_text: TEXT
-  +embedding: FLOAT[768]
-  +chunk_id: UUID <<FK>>
-  +created_at: TIMESTAMP
-  +status: ENUM
-}
+' === АТРИБУТЫ ===
 
-class "StatementContext" as CTX {
-  +id: UUID <<PK>>
-  +statement_id: UUID <<FK>>
-  +temporal_scope: DATE_RANGE
-  +geographic_scope: VARCHAR(100)
-  +entities: JSON
-}
+' SourceDocument
+usecase "<u>id</u>" as DOC_id
+usecase "name" as DOC_name
+usecase "content" as DOC_content
+usecase "uploaded_at" as DOC_date
+usecase "source_type" as DOC_type
+DOC -- DOC_id
+DOC -- DOC_name
+DOC -- DOC_content
+DOC -- DOC_date
+DOC -- DOC_type
 
-class "ContradictionPair" as CP {
-  +id: UUID <<PK>>
-  +statement_a_id: UUID <<FK>>
-  +statement_b_id: UUID <<FK>>
-  +nli_relation: ENUM
-  +confidence: FLOAT
-  +model_version: VARCHAR(50)
-  +detected_at: TIMESTAMP
-}
+' Chunk
+usecase "<u>id</u>" as CHK_id
+usecase "chunk_index" as CHK_idx
+usecase "text" as CHK_text
+CHK -- CHK_id
+CHK -- CHK_idx
+CHK -- CHK_text
 
-class "FactTopic" as TOPIC {
-  +id: UUID <<PK>>
-  +name: VARCHAR(255)
-  +embedding: FLOAT[768]
-  +keywords: TEXT[]
-}
+' AtomicStatement
+usecase "<u>id</u>" as STMT_id
+usecase "original_text" as STMT_orig
+usecase "decontextualized" as STMT_decon
+usecase "embedding" as STMT_emb
+STMT -- STMT_id
+STMT -- STMT_orig
+STMT -- STMT_decon
+STMT -- STMT_emb
 
-' === СВЯЗИ ===
+' StatementContext
+usecase "<u>id</u>" as CTX_id
+usecase "temporal_scope" as CTX_temp
+usecase "geographic_scope" as CTX_geo
+CTX -- CTX_id
+CTX -- CTX_temp
+CTX -- CTX_geo
 
-DOC ||--o{ CHK : "contains"
-CHK ||--o{ STMT : "extracted_from"
-STMT ||--o| CTX : "has_context"
-STMT }o--o{ CP : "participates_in"
-STMT }|--|| TOPIC : "belongs_to_topic"
+' ContradictionPair
+usecase "<u>id</u>" as CP_id
+usecase "nli_relation" as CP_nli
+usecase "confidence_score" as CP_conf
+CP -- CP_id
+CP -- CP_nli
+CP -- CP_conf
 
-' === ПРИМЕЧАНИЯ ===
+' FactTopic
+usecase "<u>id</u>" as TOPIC_id
+usecase "topic_name" as TOPIC_name
+TOPIC -- TOPIC_id
+TOPIC -- TOPIC_name
 
-note right of STMT
-  Атомарное утверждение
-  - original_text: как в чанке
-  - decontextualized_text: после LLM
-  - embedding: вектор для поиска
-end note
+' === СВЯЗИ (Используем Diamond для отличия от сущностей) ===
+() "Contains" as R_contains
+() "Extracted From" as R_extracted
+() "Has Context" as R_context
+() "Participates In" as R_participates
+() "Belongs To" as R_belongs
 
-note bottom of CP
-  Пара противоречия
-  - Формируется при поиске похожих фактов
-  - Классифицируется NLI-моделью (deBERTa)
-end note
+' Соединения
+DOC "1" -- R_contains
+R_contains -- "N" CHK
+
+CHK "1" -- R_extracted
+R_extracted -- "N" STMT
+
+STMT "1" -- R_context
+R_context -- "0..1" CTX
+
+' Исправлено: N:M, так как в паре противоречий 2 утверждения,
+' а одно утверждение может противоречить многим другим.
+STMT "N" -- R_participates
+R_participates -- "M" CP
+
+' Исправлено: N:M, так как утверждение может иметь несколько тегов (тем)
+STMT "N" -- R_belongs
+R_belongs -- "M" TOPIC
 
 @enduml

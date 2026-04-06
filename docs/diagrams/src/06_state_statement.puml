@@ -1,87 +1,38 @@
-@startuml 06_state_statement
-title "State-диаграмма: Lifecycle атомарного утверждения"
+@startuml
+title "State-диаграмма: Жизненный цикл атомарного утверждения"
 
-[*] --> RawChunk
+[*] --> RawChunk : "Загрузка документа"
 
-state "RawChunk" as RawChunk {
-  note: Текст из документа\nразбитый на сегменты
-}
+state RawChunk : Текст из документа, разбитый на сегменты
+state Extracting : LLM извлекает атомарные утверждения
+state Decontextualizing : LLM заменяет местоимения на сущности
+state Embedding : Sentence-BERT генерирует вектор
+state Active : Факт доступен для поиска
+state PairSelected : Факт выбран для NLI-классификации
+state NLIProcessing : deBERTa классифицирует пару
+state Flagged : Подтверждённое противоречие
+state Deprecated : Факт устарел по дате
+state Error : Ошибка обработки
+state Archived : Не участвует в поиске
 
-RawChunk --> Extracting
-
-state "Extracting" as Extracting {
-  note: LLM извлекает атомарные\nутверждения из чанка
-}
-
-Extracting --> Decontextualizing
-Extracting --> Error
-
-state "Decontextualizing" as Decontextualizing {
-  note: LLM заменяет местоимения\nна сущности
-}
-
-Decontextualizing --> Embedding
-Decontextualizing --> Error
-
-state "Embedding" as Embedding {
-  note: Sentence-BERT генерирует\nвекторное представление
-}
-
-Embedding --> Active
-Embedding --> Error
-
-state "Active" as Active {
-  note: Факт доступен для поиска
-}
-
-Active --> PairSelected
-Active --> Deprecated
-
-state "PairSelected" as PairSelected {
-  note: Факт выбран в паре\nдля NLI-классификации
-}
-
-PairSelected --> NLIProcessing
-PairSelected --> Active
-
-state "NLIProcessing" as NLIProcessing {
-  note: deBERTa классифицирует пару
-}
-
-NLIProcessing --> Flagged
-NLIProcessing --> Active
-NLIProcessing --> Error
-
-state "Flagged" as Flagged {
-  note: Подтверждённое противоречие
-}
-
-Flagged --> Archived
-Flagged --> Active
-
-state "Deprecated" as Deprecated {
-  note: Факт устарел по дате
-}
-
-Deprecated --> Archived
-
-state "Error" as Error {
-  note: Ошибка обработки
-}
-
-Error --> Extracting
-Error --> [*]
-
-state "Archived" as Archived {
-  note: Не участвует в поиске
-}
-
+RawChunk --> Extracting : "Разбиение на части"
+Extracting --> Decontextualizing : "Факты извлечены"
+Extracting --> Error : "Сбой LLM"
+Decontextualizing --> Embedding : "Местоимения заменены"
+Decontextualizing --> Error : "Сбой деконтекстуализации"
+Embedding --> Active : "Вектор создан"
+Embedding --> Error : "Сбой Sentence-BERT"
+Active --> PairSelected : "Найден похожий факт"
+Active --> Deprecated : "Истечение срока актуальности"
+PairSelected --> NLIProcessing : "Пара сформирована"
+PairSelected --> Active : "Сброс сравнения"
+NLIProcessing --> Flagged : "Обнаружено противоречие"
+NLIProcessing --> Active : "Конфликтов нет"
+NLIProcessing --> Error : "Сбой NLI-модели"
+Flagged --> Archived : "Архивация"
+Flagged --> Active : "Противоречие исправлено"
+Deprecated --> Archived : "Архивация"
+Error --> Extracting : "Повторная попытка"
+Error --> [*] : "Конец"
 Archived --> [*]
-
-note right of Active
-  Триггеры перехода:
-  - onTopicMatch(): найдены похожие факты
-  - onContradictionDetected(): NLI вернул contradiction
-end note
-
 @enduml

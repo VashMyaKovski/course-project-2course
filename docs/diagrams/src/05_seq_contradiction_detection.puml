@@ -1,6 +1,5 @@
 @startuml 05_seq_contradiction_detection
 title "Sequence: Обнаружение фактологических противоречий"
-autonumber
 
 participant "Пользователь" as User
 participant "API Gateway" as API
@@ -54,19 +53,5 @@ deactivate Detector
 
 API --> User: 200 OK
 deactivate API
-
-note right of Detector
-  Критерии выбора пар:
-  - Высокая косинусная близость
-  - Противоположные ключевые слова
-  - Одинаковые сущности
-end note
-
-note bottom
-  SLA для детекции:
-  - Поиск кандидатов: < 500 мс
-  - NLI-классификация: < 100 мс/пара
-  - Общий ответ: < 2 сек
-end note
 
 @enduml
