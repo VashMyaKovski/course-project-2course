@@ -1,54 +1,60 @@
 @startuml 02_usecase_diagram
-title "Use-Case диаграмма: Сценарии использования системы"
+title "Use-Case диаграмма: Сценарии использования системы поиска фактологических противоречий"
 
 left to right direction
 
 actor "Пользователь" as User
-actor "LLM-модуль" as LLM
-actor "Embedding-модель" as Embed
-actor "NLI-модель" as NLI
 
 rectangle "RAG Knowledge Base System" {
-  
-  usecase "UC1: Загрузить документ" as UC1
-  usecase "UC2: Извлечь атомарные утверждения" as UC2
-  usecase "UC3: Деконтекстуализировать факты" as UC3
-  usecase "UC4: Проверить на противоречия" as UC4
-  usecase "UC5: Просмотреть отчёт" as UC5
-  
-  usecase "UC1.1: Разбить текст на чанки" as UC1_1
-  usecase "UC2.1: Найти местоимения и сущности" as UC2_1
-  usecase "UC2.2: Заменить местоимения" as UC2_2
-  usecase "UC3.1: Сгенерировать вектор" as UC3_1
-  usecase "UC3.2: Сохранить в БД" as UC3_2
-  
-  usecase "UC4.1: Найти факты по теме" as UC4_1
-  usecase "UC4.2: Сформировать пары" as UC4_2
-  usecase "UC4.3: Классифицировать через NLI" as UC4_3
-  usecase "UC4.4: Фильтровать по уверенности" as UC4_4
-  
+
+  usecase "Загрузить документ" as UC1
+  usecase "Проверить на противоречия" as UC2
+  usecase "Просмотреть отчёт" as UC3
+
+  usecase "Извлечь атомарные утверждения" as UC1_1
+  usecase "Разбить текст на чанки" as UC1_1_1
+  usecase "Извлечь атомартные утверждения" as UC1_1_2
+  usecase "Деконтекстуализировать факты" as UC1_2
+  usecase "Найти местоимения и сущности" as UC1_2_1
+  usecase "Заменить местоимения" as UC1_2_2
+  usecase "Сохранить атомарное утверждение" as UC1_3
+  usecase "Сгенерировать вектор" as UC1_3_1
+  usecase "Сохранить в векторную БД" as UC1_3_2
+
+  usecase "Найти факты по теме" as UC2_1
+  usecase "Сформировать пары" as UC2_2
+  usecase "Классифицировать через NLI" as UC2_3
+  usecase "Отильтровать по уверенности" as UC2_4
+
   UC1 ..> UC1_1 : <<include>>
+  UC1 ..> UC1_2 : <<include>>
+  UC1 ..> UC1_3 : <<include>>
+
   UC2 ..> UC2_1 : <<include>>
   UC2 ..> UC2_2 : <<include>>
-  UC3 ..> UC3_1 : <<include>>
-  UC3 ..> UC3_2 : <<include>>
-  UC4 ..> UC4_1 : <<include>>
-  UC4 ..> UC4_2 : <<include>>
-  UC4 ..> UC4_3 : <<include>>
-  UC4 ..> UC4_4 : <<extend>>
+  UC2 ..> UC2_3 : <<include>>
+  UC2 ..> UC2_4 : <<extend>>
+
+  UC1_1 ..> UC1_1_1 : <<include>>
+  UC1_1 ..> UC1_1_2 : <<include>>
+  UC1_2 ..> UC1_2_1 : <<include>>
+  UC1_2 ..> UC1_2_2 : <<include>>
+  UC1_3 ..> UC1_3_1 : <<include>>
+  UC1_3 ..> UC1_3_2 : <<include>>
+
+  ' UC1 ..> UC1_1 : <<include>>
+  ' UC2 ..> UC2_1 : <<include>>
+  ' UC2 ..> UC2_2 : <<include>>
+  ' UC3 ..> UC3_1 : <<include>>
+  ' UC3 ..> UC3_2 : <<include>>
+  ' UC4 ..> UC4_1 : <<include>>
+  ' UC4 ..> UC4_2 : <<include>>
+  ' UC4 ..> UC4_3 : <<include>>
+  ' UC4 ..> UC4_4 : <<extend>>
 }
 
 User --> UC1
-User --> UC4
-User --> UC5
-LLM --> UC2
-LLM --> UC3
-Embed --> UC3_1
-NLI --> UC4_3
-
-note right of UC3
-  Деконтекстуализация:
-  LLM заменяет местоимения на сущности
-end note
+User --> UC2
+User --> UC3
 
 @enduml
