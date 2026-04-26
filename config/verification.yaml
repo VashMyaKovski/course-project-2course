@@ -1,0 +1,23 @@
+# Verification Module Configuration
+nli:
+  model_name: "microsoft/deberta-v3-large"  # Default DeBERTa model for NLI
+  # You can also specify a local path to a fine-tuned model
+  # model_name: "./models/deberta-finetuned"
+
+verification:
+  confidence_threshold: 0.7  # Default confidence threshold for aggregating results
+  search_limit: 10           # Default number of evidence records to retrieve
+
+vector_store:
+  # This is a placeholder for vector store configuration.
+  # The actual configuration will depend on the vector store implementation (e.g., FAISS, Qdrant, etc.)
+  embedding_dimension: 768   # Default embedding dimension (must match the model used for embeddings)
+  # Example for FAISS:
+  # index_type: "FlatL2"     # or "IVFFlat", etc.
+  # nlist: 100               # for IVF indexes
+  # For Qdrant:
+  # host: "localhost"
+  # port: 6333
+  # collection_name: "facts"
+
+# Additional settings can be added here as needed
