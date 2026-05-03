@@ -1,10 +1,12 @@
 import json
-from typing import Dict, Union
-from sentence_transformers import CrossEncoder
-import torch
 import os
+from typing import Dict, Union
+
+import torch
+from sentence_transformers import CrossEncoder
 
 DEFAULT_MODEL_NAME = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
+
 
 class ContradictionDetector:
     """
@@ -19,7 +21,7 @@ class ContradictionDetector:
         print(f"🔄 Загрузка Cross-Encoder модели: {model_name}...")
 
         # Автоматический выбор устройства (CUDA/CPU)
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = CrossEncoder(model_name, device=device)
 
         # Получение маппинга лейблов из конфигурации модели
@@ -27,16 +29,20 @@ class ContradictionDetector:
         self.label2id = self.model.config.label2id
 
         # Динамический поиск индекса класса 'contradiction'
-        if 'contradiction' in self.label2id:
-            self.contradiction_idx = self.label2id['contradiction']
+        if "contradiction" in self.label2id:
+            self.contradiction_idx = self.label2id["contradiction"]
         else:
-            raise ValueError(f"Модель не содержит лейбла 'contradiction'. Доступные: {list(self.id2label.values())}")
+            raise ValueError(
+                f"Модель не содержит лейбла 'contradiction'. Доступные: {list(self.id2label.values())}"
+            )
 
         print(f"✅ Модель загружена на {device}.")
         print(f"   Классы: {self.id2label}")
         print(f"   Индекс 'contradiction': {self.contradiction_idx}")
 
-    def detect(self, premise: str, hypothesis: str) -> Dict[str, Union[float, bool, str]]:
+    def detect(
+        self, premise: str, hypothesis: str
+    ) -> Dict[str, Union[float, bool, str]]:
         """
         Анализ пары предложений.
 
@@ -48,9 +54,7 @@ class ContradictionDetector:
                 - all_probabilities: dict
         """
         scores = self.model.predict(
-            [(premise, hypothesis)],
-            apply_softmax=True,
-            convert_to_numpy=True
+            [(premise, hypothesis)], apply_softmax=True, convert_to_numpy=True
         )[0]
 
         contradiction_prob = float(scores[self.contradiction_idx])
@@ -66,7 +70,7 @@ class ContradictionDetector:
             "all_probabilities": {
                 label: round(float(prob), 4)
                 for label, prob in zip(self.id2label.values(), scores)
-            }
+            },
         }
 
     def to_json(self, premise: str, hypothesis: str) -> str:
