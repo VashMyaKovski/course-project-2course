@@ -34,22 +34,11 @@ class ContradictionDetector:
                     nli_results: {ref_sentence: str, rel_class: str}
                 }
         """
-        if not isinstance(dict_of_facts, dict):
-            raise TypeError("dict_of_facts должен быть словарем")
 
         main_fact = dict_of_facts.get("main_fact_what_is_going_to_be_checked")
         list_of_facts = dict_of_facts.get("list_of_facts", [])
 
-        if not isinstance(main_fact, str):
-            raise ValueError("main_fact_what_is_going_to_be_checked должен быть строкой")
-
-        if not isinstance(list_of_facts, list):
-            raise ValueError("list_of_facts должен быть списком")
-
         # Получаем отношения для всех фактов
         nli_results = self.nli_model.predict_relations_batch(main_fact, list_of_facts)
 
-        return {
-            "base_sentence": main_fact,
-            "nli_results": nli_results
-        }
+        return {"base_sentence": main_fact, "nli_results": nli_results}
