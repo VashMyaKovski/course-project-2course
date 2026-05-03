@@ -10,7 +10,7 @@ class TestParagraphChunker:
         """Test splitting text into paragraphs."""
         input_dict = {
             "data": "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.",
-            "metadata": "some-metadata"
+            "metadata": "some-metadata",
         }
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
@@ -19,7 +19,7 @@ class TestParagraphChunker:
         assert result["chunks"] == [
             "First paragraph.",
             "Second paragraph.",
-            "Third paragraph."
+            "Third paragraph.",
         ]
         assert result["metadata"] == "some-metadata"
 
@@ -27,7 +27,7 @@ class TestParagraphChunker:
         """Test handling of various newline combinations."""
         input_dict = {
             "data": "Para 1\r\n\r\nPara 2\r\n\r\n\r\nPara 3",
-            "metadata": "meta"
+            "metadata": "meta",
         }
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
@@ -40,7 +40,7 @@ class TestParagraphChunker:
         """Test that whitespace is trimmed from chunks."""
         input_dict = {
             "data": "  First paragraph with spaces.  \n\n  Second paragraph.  ",
-            "metadata": ""
+            "metadata": "",
         }
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
@@ -52,7 +52,7 @@ class TestParagraphChunker:
         """Test that chunks smaller than min_chunk_size are filtered out."""
         input_dict = {
             "data": "This is a valid paragraph.\n\nNo.\n\nAnother valid paragraph here.",
-            "metadata": "test"
+            "metadata": "test",
         }
         chunker = ParagraphChunker(min_chunk_size=20)
         result = chunker.chunk(input_dict)
@@ -64,10 +64,7 @@ class TestParagraphChunker:
 
     def test_empty_input(self):
         """Test handling of empty data field."""
-        input_dict = {
-            "data": "",
-            "metadata": "test"
-        }
+        input_dict = {"data": "", "metadata": "test"}
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
 
@@ -76,10 +73,7 @@ class TestParagraphChunker:
 
     def test_only_whitespace(self):
         """Test handling of whitespace-only input."""
-        input_dict = {
-            "data": "   \n\n   \n\n   ",
-            "metadata": "meta"
-        }
+        input_dict = {"data": "   \n\n   \n\n   ", "metadata": "meta"}
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
 
@@ -89,20 +83,20 @@ class TestParagraphChunker:
         """Test text with no paragraph separators."""
         input_dict = {
             "data": "This is just one continuous paragraph without breaks.",
-            "metadata": ""
+            "metadata": "",
         }
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
 
         assert len(result["chunks"]) == 1
-        assert result["chunks"][0] == "This is just one continuous paragraph without breaks."
+        assert (
+            result["chunks"][0]
+            == "This is just one continuous paragraph without breaks."
+        )
 
     def test_multiple_consecutive_separators(self):
         """Test text with multiple consecutive newline groups."""
-        input_dict = {
-            "data": "Para 1\n\n\n\nPara 2\n\n\n\n\nPara 3",
-            "metadata": "x"
-        }
+        input_dict = {"data": "Para 1\n\n\n\nPara 2\n\n\n\n\nPara 3", "metadata": "x"}
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
 
@@ -112,7 +106,7 @@ class TestParagraphChunker:
         """Test that sentences are not split across chunks."""
         input_dict = {
             "data": "This is sentence one. This is sentence two.\n\nAnother paragraph here.",
-            "metadata": "test"
+            "metadata": "test",
         }
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
@@ -123,9 +117,7 @@ class TestParagraphChunker:
 
     def test_missing_metadata_field(self):
         """Test handling when metadata field is missing."""
-        input_dict = {
-            "data": "Some text here."
-        }
+        input_dict = {"data": "Some text here."}
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
 
@@ -134,10 +126,7 @@ class TestParagraphChunker:
 
     def test_mixed_separators(self):
         """Test text with mixed \n\n and \r\n\r\n separators."""
-        input_dict = {
-            "data": "First\n\nSecond\r\n\r\nThird",
-            "metadata": "test"
-        }
+        input_dict = {"data": "First\n\nSecond\r\n\r\nThird", "metadata": "test"}
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
 
@@ -147,7 +136,7 @@ class TestParagraphChunker:
         """Test handling of unicode characters."""
         input_dict = {
             "data": "Привет мир.\n\nمرحبا بالعالم.\n\nHello world 🌍.",
-            "metadata": ""
+            "metadata": "",
         }
         chunker = ParagraphChunker()
         result = chunker.chunk(input_dict)
@@ -157,10 +146,7 @@ class TestParagraphChunker:
     def test_long_paragraph_not_split(self):
         """Test that a long paragraph remains as one chunk (no auto-splitting)."""
         long_text = " ".join(["word"] * 200)  # Very long paragraph
-        input_dict = {
-            "data": long_text,
-            "metadata": ""
-        }
+        input_dict = {"data": long_text, "metadata": ""}
         chunker = ParagraphChunker(max_chunk_size=500)
         result = chunker.chunk(input_dict)
 
@@ -170,11 +156,8 @@ class TestParagraphChunker:
 
     def test_custom_separators(self):
         """Test using custom paragraph separators."""
-        input_dict = {
-            "data": "First||Second||Third",
-            "metadata": ""
-        }
-        chunker = ParagraphChunker(paragraph_separators=['||'])
+        input_dict = {"data": "First||Second||Third", "metadata": ""}
+        chunker = ParagraphChunker(paragraph_separators=["||"])
         result = chunker.chunk(input_dict)
 
         assert len(result["chunks"]) == 3

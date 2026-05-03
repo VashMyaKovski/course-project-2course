@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from loguru import logger
 
-from src.chunking.strategies import TextChunker
+from src.chunking.paragraph_chunker import ParagraphChunker
 from src.contradiction_detector.detector import ContradictionDetector
 from src.embeddings.generator import EmbeddingGenerator
 from src.fact_extractor import Llama31InstructChatCompletionFactExtractor
@@ -21,8 +21,11 @@ class ContradictionDetectionPipeline(BasePipeline):
         super().__init__(config)
         # Инициализация компонентов
         self.ingestion = IngestionPipeline()
-        self.chunker = TextChunker()
+
+        self.chunker = ParagraphChunker()
+        
         self.extractor = Llama31InstructChatCompletionFactExtractor()
+
         self.embedder = EmbeddingGenerator()
         self.vector_db = VectorDBBuilder()
         self.detector = ContradictionDetector()
