@@ -1,5 +1,6 @@
 import json
 import re
+import ast
 import urllib.error
 import urllib.request
 from typing import Any
@@ -52,8 +53,7 @@ class Llama31InstructChatCompletionFactExtractor(FactExtractorBase):
         }
 
         raw = self._post_chat(payload)
-        facts = _parse_facts_json(raw)
-        return _ensure_author_subject_if_needed(text, facts)
+        return _parse_facts_json(raw)
 
     def _post_chat(self, payload: dict[str, Any]) -> str:
         url = f"{self._api_base_url}{LlamaChatAPI.COMPLETIONS_PATH.value}"
@@ -110,7 +110,7 @@ def _parse_facts_json(llm_content: str) -> list[str]:
         try:
             parsed = json.loads(blob)
             if isinstance(parsed, list):
-                facts = [_normalize_fact(item) for item in parsed]
+                facts = _normalize_list_facts(parsed)
                 return [x for x in facts if x]
         except json.JSONDecodeError:
             continue
@@ -128,22 +128,40 @@ def _normalize_fact(item: Any) -> str:
     return str(item).strip() if item is not None else ""
 
 
-def _ensure_author_subject_if_needed(chunk: str, facts: list[str]) -> list[str]:
+def _normalize_list_facts(items: list[Any]) -> list[str]:
     """
-    Если исходный чанк про автора (я/мы), приводим каждый факт к явному субъекту «Автор».
-    Это стабилизирует формат для последующих этапов пайплайна.
+    Нормализация списка фактов к list[str].
+    В т.ч. чинит ответ модели вида ["['факт1', 'факт2']"].
     """
-    if not re.search(r"\b(я|мы)\b", chunk, flags=re.IGNORECASE):
+    facts = [_normalize_fact(item) for item in items]
+    facts = [x for x in facts if x]
+
+    if len(facts) != 1:
         return facts
 
-    normalized: list[str] = []
-    for fact in facts:
-        cleaned = fact.strip()
-        if not cleaned:
-            continue
-        if cleaned.startswith("Автор"):
-            normalized.append(cleaned)
-            continue
-        # Нормализуем регистр начала, чтобы получить читаемое "Автор ...".
-        normalized.append(f"Автор {cleaned[:1].lower()}{cleaned[1:]}")
-    return normalized
+    embedded = _try_parse_embedded_list_string(facts[0])
+    return embedded if embedded else facts
+
+
+def _try_parse_embedded_list_string(value: str) -> list[str]:
+    cleaned = value.strip()
+    if not (cleaned.startswith("[") and cleaned.endswith("]")):
+        return []
+
+    # Сначала пытаемся как JSON-массив.
+    try:
+        parsed_json = json.loads(cleaned)
+        if isinstance(parsed_json, list):
+            return [x for x in (_normalize_fact(i) for i in parsed_json) if x]
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback для python-строк вида "['a', 'b']".
+    try:
+        parsed_python = ast.literal_eval(cleaned)
+        if isinstance(parsed_python, list):
+            return [x for x in (_normalize_fact(i) for i in parsed_python) if x]
+    except (ValueError, SyntaxError):
+        return []
+
+    return []
