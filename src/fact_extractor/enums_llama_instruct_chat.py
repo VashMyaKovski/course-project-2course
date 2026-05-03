@@ -49,4 +49,3 @@ class LlamaChatPrompt(Enum):
 
 class LlamaChatAPI(Enum):
     COMPLETIONS_PATH = "/chat/completions"
-
