@@ -5,7 +5,7 @@ from loguru import logger
 from src.chunking.strategies import TextChunker
 from src.contradiction_detector.detector import ContradictionDetector
 from src.embeddings.generator import EmbeddingGenerator
-from src.fact_extractor.extractor import FactExtractor
+from src.fact_extractor import Llama31InstructChatCompletionFactExtractor
 from src.ingestion.pipeline import IngestionPipeline
 from src.pipeline.base import BasePipeline
 from src.report_generator.generator import ReportGenerator
@@ -22,7 +22,7 @@ class ContradictionDetectionPipeline(BasePipeline):
         # Инициализация компонентов
         self.ingestion = IngestionPipeline()
         self.chunker = TextChunker()
-        self.extractor = FactExtractor()
+        self.extractor = Llama31InstructChatCompletionFactExtractor()
         self.embedder = EmbeddingGenerator()
         self.vector_db = VectorDBBuilder()
         self.detector = ContradictionDetector()
@@ -47,26 +47,26 @@ class ContradictionDetectionPipeline(BasePipeline):
                 chunks.extend(self.chunker.chunk(doc["content"]))
             self.state["chunks"] = chunks
 
-            # Шаг 3: Triplet Extraction
-            self._log_step("triplet_extraction")
-            triplets = []
+            # Шаг 3: извлечение атомарных фактов из чанков
+            self._log_step("fact_extraction")
+            facts: list[str] = []
             for chunk in chunks:
-                triplets.extend(self.extractor.extract(chunk))
-            self.state["triplets"] = triplets
+                facts.extend(self.extractor.extract(chunk))
+            self.state["facts"] = facts
 
             # Шаг 4: Embedding
             self._log_step("embedding")
-            texts = [f"{t['s']} {t['p']} {t['o']}" for t in triplets]
+            texts = facts
             embeddings = self.embedder.generate(texts)
             self.state["embeddings"] = embeddings
 
             # Шаг 5: Vector DB Indexing
             self._log_step("vector_indexing")
-            self.vector_db.build(embeddings, triplets)
+            self.vector_db.build(embeddings, facts)
 
             # Шаг 6: Contradiction Detection
             self._log_step("contradiction_detection")
-            contradictions = self.detector.detect_all(triplets, embeddings)
+            contradictions = self.detector.detect_all(facts, embeddings)
             self.state["contradictions"] = contradictions
 
             # Шаг 7: Report Generation
@@ -79,7 +79,7 @@ class ContradictionDetectionPipeline(BasePipeline):
                 "status": "success",
                 "report_path": report_path,
                 "contradictions_count": len(contradictions),
-                "triplets_count": len(triplets),
+                "facts_count": len(facts),
             }
 
         except Exception as e:
