@@ -8,11 +8,7 @@ import numpy as np
 from loguru import logger
 from src.utils.device import resolve_device
 
-try:
-    from transformers import AutoModel, AutoTokenizer
-except ImportError:
-    AutoModel = None
-    AutoTokenizer = None
+from transformers import AutoModel, AutoTokenizer
 
 if TYPE_CHECKING:
     from transformers import PreTrainedModel, PreTrainedTokenizerBase
