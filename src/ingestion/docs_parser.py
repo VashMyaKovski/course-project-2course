@@ -3,8 +3,12 @@ from __future__ import annotations
 import mimetypes
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Final
+from typing import Any
 from uuid import uuid4
+
+from pypdf import PdfReader
+
+from config.text_encoding import TextEncoding
 
 Metadata = dict[str, Any]
 IngestedDocument = dict[str, Metadata]
@@ -12,8 +16,6 @@ IngestedDocument = dict[str, Metadata]
 
 class DocumentParser:
     """Extract document text and build normalized file metadata."""
-
-    _TEXT_ENCODINGS: Final[tuple[str, ...]] = ("utf-8", "utf-8-sig", "cp1251")
 
     def parse(self, file_path: str) -> IngestedDocument:
         path = Path(file_path)
@@ -35,23 +37,15 @@ class DocumentParser:
     def _extract_text_file(self, path: Path) -> tuple[str, str]:
         file_bytes = path.read_bytes()
 
-        for encoding in self._TEXT_ENCODINGS:
+        for encoding in TextEncoding:
             try:
-                return file_bytes.decode(encoding), encoding
+                return file_bytes.decode(encoding.value), encoding.value
             except UnicodeDecodeError:
                 continue
 
         return file_bytes.decode("latin-1"), "latin-1"
 
     def _extract_pdf_text(self, path: Path) -> str:
-        try:
-            from pypdf import PdfReader
-        except ImportError as exc:
-            raise RuntimeError(
-                "PDF parsing requires dependency 'pypdf'. "
-                "Install it with: pip install pypdf"
-            ) from exc
-
         reader = PdfReader(str(path))
         pages = [(page.extract_text() or "").strip() for page in reader.pages]
         return "\n\n".join(page for page in pages if page)
