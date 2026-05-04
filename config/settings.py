@@ -17,14 +17,51 @@ class LlamaFactExtractorSettings:
 
 
 @dataclass(frozen=True)
+class QdrantSettings:
+    """Параметры Qdrant для атомарных утверждений (вектор + payload)."""
+
+    url: str
+    api_key: str | None
+    collection_name: str
+    vector_size: int
+    distance: str
+    timeout_sec: float
+    search_top_k: int
+    score_threshold: float | None
+    upsert_batch_size: int
+    payload_text_key: str
+    payload_document_id_key: str
+    payload_author_key: str
+
+
+@dataclass(frozen=True)
 class AppSettings:
     llama_fact_extractor: LlamaFactExtractorSettings
+    qdrant: QdrantSettings
 
 
 def _to_float(value: str | None, default: float) -> float:
     if value is None:
         return default
     return float(value)
+
+
+def _to_int(value: str | None, default: int) -> int:
+    if value is None:
+        return default
+    return int(value)
+
+
+def _optional_float(value: str | None) -> float | None:
+    if value is None or value.strip() == "":
+        return None
+    return float(value)
+
+
+def _optional_api_key(value: str | None) -> str | None:
+    if value is None or value.strip() == "":
+        return None
+    return value.strip()
 
 
 @lru_cache(maxsize=1)
@@ -50,4 +87,19 @@ def get_settings() -> AppSettings:
         temperature=_to_float(os.getenv("LLAMA_CHAT_TEMPERATURE"), 0.2),
     )
 
-    return AppSettings(llama_fact_extractor=llama)
+    qdrant = QdrantSettings(
+        url=os.getenv("QDRANT_URL", "http://127.0.0.1:6333").rstrip("/"),
+        api_key=_optional_api_key(os.getenv("QDRANT_API_KEY")),
+        collection_name=os.getenv("QDRANT_COLLECTION_NAME", "atomic_statements"),
+        vector_size=_to_int(os.getenv("QDRANT_VECTOR_SIZE"), 384),
+        distance=os.getenv("QDRANT_DISTANCE", "COSINE").strip().upper(),
+        timeout_sec=_to_float(os.getenv("QDRANT_TIMEOUT_SEC"), 30.0),
+        search_top_k=_to_int(os.getenv("QDRANT_SEARCH_TOP_K"), 15),
+        score_threshold=_optional_float(os.getenv("QDRANT_SCORE_THRESHOLD")),
+        upsert_batch_size=max(1, _to_int(os.getenv("QDRANT_UPSERT_BATCH_SIZE"), 128)),
+        payload_text_key=os.getenv("QDRANT_PAYLOAD_KEY_TEXT", "text"),
+        payload_document_id_key=os.getenv("QDRANT_PAYLOAD_KEY_DOCUMENT_ID", "document_id"),
+        payload_author_key=os.getenv("QDRANT_PAYLOAD_KEY_AUTHOR", "author"),
+    )
+
+    return AppSettings(llama_fact_extractor=llama, qdrant=qdrant)

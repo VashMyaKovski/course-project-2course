@@ -1,0 +1,11 @@
+# Qdrant: REST :6333, gRPC :6334; данные на хосте в ./data/qdrant (bind mount → /qdrant/storage).
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: course-qdrant
+    ports:
+      - "${QDRANT_HOST_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_HOST_PORT:-6334}:6334"
+    volumes:
+      - "${QDRANT_DATA_DIR:-./data/qdrant}:/qdrant/storage"
+    restart: unless-stopped

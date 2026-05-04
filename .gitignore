@@ -207,3 +207,6 @@ marimo/_lsp/
 __marimo__/
 
 .idea/
+
+# Локальные данные Qdrant (вектора и метаданные коллекций)
+data/qdrant/
