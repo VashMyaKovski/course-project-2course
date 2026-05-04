@@ -14,8 +14,7 @@ class IngestionPipeline:
         document = self.parser.parse(file_path)
         _, metadata = next(iter(document.items()))
         logger.info(
-            "Ingestion finished: uuid={}, chars={}",
-            metadata["uuid"],
-            metadata["content_length"],
+            f"Ingestion finished: uuid={metadata['uuid']}, "
+            f"chars={metadata['content_length']}"
         )
         return document
