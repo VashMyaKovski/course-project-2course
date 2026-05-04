@@ -210,3 +210,6 @@ __marimo__/
 
 # Локальные данные Qdrant (вектора и метаданные коллекций)
 data/qdrant/
+
+# Локальные данные Ollama (модели и кэш под /root/.ollama)
+data/ollama/
