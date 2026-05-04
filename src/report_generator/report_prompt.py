@@ -29,7 +29,7 @@ class ContradictionAnalysisPromptBuilder(ReportPromptBuilder):
     Formats contradiction detection results for LLM analysis.
     """
 
-    def __init__(self, model_name: str = "google/gemma-2-9b-it"):
+    def __init__(self, model_name: str = "openrouter/owl-alpha"):
         """
         Initialize the prompt builder.
 

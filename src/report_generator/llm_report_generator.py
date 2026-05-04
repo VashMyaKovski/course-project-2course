@@ -32,7 +32,7 @@ class OpenRouterLLMProvider(LLMProvider):
     Handles communication with Google Gemma or other models via OpenRouter.
     """
 
-    DEFAULT_MODEL = "google/gemma-4-31b-it:free"
+    DEFAULT_MODEL = "openrouter/owl-alpha"
     DEFAULT_TEMPERATURE = 0.7
     DEFAULT_MAX_TOKENS = 2000
     OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"

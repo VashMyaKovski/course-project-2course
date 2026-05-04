@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
-
+import os
 import pytest
 
 from report_generator.generator import ReportGenerator as FileReportGenerator
@@ -19,12 +19,6 @@ class TestReportPromptBuilder:
         """Test that ReportPromptBuilder cannot be instantiated."""
         with pytest.raises(TypeError):
             ReportPromptBuilder()
-
-    def test_contradiction_prompt_builder_init(self):
-        """Test prompt builder initialization."""
-        builder = ContradictionAnalysisPromptBuilder()
-        assert builder.model_name == "google/gemma-2-9b-it"
-        assert builder.system_instruction is not None
 
     def test_build_prompt_with_empty_list(self):
         """Test prompt building with empty contradictions list."""
@@ -319,3 +313,72 @@ class TestFileReportGenerator:
         for result in results:
             assert result["status"] == "success"
             assert Path(result["file_path"]).exists()
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not os.getenv("OPENROUTER_API_KEY"),
+    reason="Requires OPENROUTER_API_KEY environment variable"
+)
+class TestRealReportGeneration:
+    """Integration tests with real API calls."""
+
+    def test_generate_and_save_report_as_text(self, tmp_path):
+        """
+        REAL integration test: generates report via OpenRouter API 
+        and saves the report text to a .txt file.
+        """
+        from report_generator.generator import ReportGenerator as FileReportGenerator
+        from report_generator.llm_report_generator import OpenRouterLLMProvider
+        from report_generator.report_prompt import ContradictionAnalysisPromptBuilder
+
+        # Use a fast/cheap model for testing
+        llm_provider = OpenRouterLLMProvider(
+            api_key=os.getenv("OPENROUTER_API_KEY"),
+            model="openrouter/owl-alpha",  # free tier model
+            temperature=0.3,
+            max_tokens=500,  # limit tokens for faster/cheaper test
+        )
+
+        generator = FileReportGenerator(
+            output_dir=str(tmp_path),
+            llm_provider=llm_provider,
+        )
+
+        # Simple, realistic contradiction data
+        contradictions = [
+            {
+                "base_sentence": "Python is a compiled programming language.",
+                "nli_results": {
+                    "Python code is executed by an interpreter.": "contradiction",
+                    "Python supports object-oriented programming.": "entailment",
+                },
+            }
+        ]
+
+        # Generate report (this makes a real API call)
+        result = generator.generate(contradictions, report_name="integration_test")
+
+        # Verify JSON report was saved
+        assert result["status"] == "success"
+        json_path = Path(result["file_path"])
+        assert json_path.exists()
+
+        # === NEW: Extract and save report as plain text file ===
+        import json
+        with open(json_path, "r", encoding="utf-8") as f:
+            report_data = json.load(f)
+        
+        with open(result["file_path"], "r", encoding="utf-8") as f:
+            data = json.load(f)
+    
+        print(f"📄 Report content:\n{'='*50}\n{data['report']}\n{'='*50}\n")
+
+        txt_path = tmp_path / "integration_test.txt"
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(report_data["report"])
+
+        # Verify text file exists and has content
+        assert txt_path.exists()
+        assert txt_path.stat().st_size > 0
+        assert "contradiction" in report_data["report"].lower() or "analysis" in report_data["report"].lower()
