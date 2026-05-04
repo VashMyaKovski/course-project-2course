@@ -372,7 +372,7 @@ class TestRealReportGeneration:
         with open(result["file_path"], "r", encoding="utf-8") as f:
             data = json.load(f)
     
-        print(f"📄 Report content:\n{'='*50}\n{data['report']}\n{'='*50}\n")
+        print(f"Report content:\n{'='*50}\n{data['report']}\n{'='*50}\n")
 
         txt_path = tmp_path / "integration_test.txt"
         with open(txt_path, "w", encoding="utf-8") as f:
