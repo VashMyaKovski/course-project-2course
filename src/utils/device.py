@@ -1,16 +1,8 @@
-def resolve_device(preferred_device: str | None = None) -> str:
+def resolve_device() -> str:
     """
     Return computation device string for transformer models.
+    Use CUDA when available, else CPU.
     """
-    if preferred_device:
-        if preferred_device.startswith("cuda"):
-            try:
-                import torch
-            except ImportError:
-                return "cpu"
-            return preferred_device if torch.cuda.is_available() else "cpu"
-        return preferred_device
-
     try:
         import torch
     except ImportError:
