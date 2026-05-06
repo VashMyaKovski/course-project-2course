@@ -213,3 +213,4 @@ data/qdrant/
 
 # Локальные данные Ollama (модели и кэш под /root/.ollama)
 data/ollama/
+/data/
