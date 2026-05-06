@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from pypdf import PdfReader
 
-from config.text_encoding import TextEncoding
+from config.settings import TextEncoding
 
 Metadata = dict[str, Any]
 IngestedDocument = dict[str, Metadata]

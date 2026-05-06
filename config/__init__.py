@@ -1,4 +1,15 @@
-from config.settings import AppSettings, LlamaFactExtractorSettings, get_settings
-from config.text_encoding import TextEncoding
+from config.settings import (
+    AppSettings,
+    EmbeddingModelConfig,
+    LlamaFactExtractorSettings,
+    TextEncoding,
+    get_settings,
+)
 
-__all__ = ["AppSettings", "LlamaFactExtractorSettings", "TextEncoding", "get_settings"]
+__all__ = [
+    "AppSettings",
+    "EmbeddingModelConfig",
+    "LlamaFactExtractorSettings",
+    "TextEncoding",
+    "get_settings",
+]
