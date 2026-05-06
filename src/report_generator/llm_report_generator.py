@@ -175,3 +175,13 @@ class ReportGenerator:
             "num_contradictions": len(contradictions),
             "report": report_text,
         }
+
+if __name__ == "__main__":
+    report_generator = OpenRouterLLMProvider()
+
+    response = report_generator.generate_report(
+        prompt="Сгенерируй что-нибудь.",
+    )
+
+    print(response)
+
