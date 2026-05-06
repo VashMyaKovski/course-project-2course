@@ -1,9 +1,19 @@
-from fastapi import UploadFile
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class DetectionRequest(BaseModel):
-    file: UploadFile
+    report_name: Optional[str] = Field(
+        default=None,
+        description="Optional report name without extension.",
+    )
 
 
-class DetectionResponse(BaseModel): ...
+class DetectionResponse(BaseModel):
+    status: str
+    report: Dict[str, Any]
+    contradictions_count: int
+    facts_count: int
+    chunks_count: int
+    contradictions: List[Dict[str, Any]]
