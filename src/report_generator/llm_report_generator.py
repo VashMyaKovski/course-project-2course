@@ -1,9 +1,9 @@
-import json
-import os
 from abc import ABC, abstractmethod
 from typing import Optional
 
 import httpx
+
+from config import get_settings
 
 
 class LLMProvider(ABC):
@@ -56,7 +56,9 @@ class OpenRouterLLMProvider(LLMProvider):
         Raises:
             ValueError: If API key is not provided and not in environment.
         """
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
+        settings = get_settings().report_generator
+        self.api_key = settings.openrouter_api_key
+
         if not self.api_key:
             raise ValueError(
                 "OpenRouter API key not provided. Set OPENROUTER_API_KEY environment variable."

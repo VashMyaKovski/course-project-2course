@@ -2,12 +2,8 @@
 """Тест для ContradictionDetector с реальной моделью."""
 
 import os
-import sys
 
-# Добавляем src в путь
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from contradiction_detector.detector import ContradictionDetector
+from src.contradiction_detector.detector import ContradictionDetector
 
 
 def test_detector():
