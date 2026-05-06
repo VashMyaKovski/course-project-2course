@@ -2,10 +2,17 @@ import os
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
+from enum import Enum
 
 from dotenv import load_dotenv
 
 from src.utils.device import resolve_device
+
+
+class TextEncoding(str, Enum):
+    UTF_8 = "utf-8"
+    UTF_8_SIG = "utf-8-sig"
+    CP1251 = "cp1251"
 
 
 @dataclass(frozen=True)
