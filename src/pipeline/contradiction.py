@@ -70,7 +70,6 @@ class ContradictionDetectionPipeline(BasePipeline):
             # Шаг 6: Contradiction Detection
             self._log_step("contradiction_detection")
             contradictions = self.detector.detect_all(facts, embeddings)
-            self.state["contradictions"] = contradictions
 
             # Шаг 7: Report Generation
             self._log_step("report_generation")

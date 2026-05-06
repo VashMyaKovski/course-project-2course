@@ -3,6 +3,7 @@ from config.settings import (
     EmbeddingModelConfig,
     LlamaFactExtractorSettings,
     TextEncoding,
+    QdrantSettings,
     get_settings,
 )
 
@@ -11,5 +12,6 @@ __all__ = [
     "EmbeddingModelConfig",
     "LlamaFactExtractorSettings",
     "TextEncoding",
+    "QdrantSettings",
     "get_settings",
 ]
