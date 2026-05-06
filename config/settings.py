@@ -5,6 +5,7 @@ from pathlib import Path
 from enum import Enum
 
 from dotenv import load_dotenv
+from scipy._lib.pyprima.common import message
 
 from src.utils.device import resolve_device
 
@@ -53,11 +54,16 @@ class QdrantSettings:
     payload_document_id_key: str
     payload_author_key: str
 
+@dataclass(frozen=True)
+class ReportGeneratorSettings:
+    openrouter_api_key: str
+
 
 @dataclass(frozen=True)
 class AppSettings:
     llama_fact_extractor: LlamaFactExtractorSettings
     qdrant: QdrantSettings
+    report_generator: ReportGeneratorSettings
 
 
 def _to_float(value: str | None, default: float) -> float:
@@ -111,7 +117,7 @@ def get_settings() -> AppSettings:
         url=os.getenv("QDRANT_URL", "http://127.0.0.1:6333").rstrip("/"),
         api_key=_optional_api_key(os.getenv("QDRANT_API_KEY")),
         collection_name=os.getenv("QDRANT_COLLECTION_NAME", "atomic_statements"),
-        vector_size=_to_int(os.getenv("QDRANT_VECTOR_SIZE"), 384),
+        vector_size=_to_int(os.getenv("QDRANT_VECTOR_SIZE"), 768),
         distance=os.getenv("QDRANT_DISTANCE", "COSINE").strip().upper(),
         timeout_sec=_to_float(os.getenv("QDRANT_TIMEOUT_SEC"), 30.0),
         search_top_k=_to_int(os.getenv("QDRANT_SEARCH_TOP_K"), 15),
@@ -122,4 +128,8 @@ def get_settings() -> AppSettings:
         payload_author_key=os.getenv("QDRANT_PAYLOAD_KEY_AUTHOR", "author"),
     )
 
-    return AppSettings(llama_fact_extractor=llama, qdrant=qdrant)
+    report_generator = ReportGeneratorSettings(
+        openrouter_api_key=os.getenv("OPENROUTER_API_KEY"),
+    )
+
+    return AppSettings(llama_fact_extractor=llama, qdrant=qdrant, report_generator=report_generator)

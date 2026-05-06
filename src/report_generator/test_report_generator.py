@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, Mock, patch
 import os
 import pytest
 
-from report_generator.generator import ReportGenerator as FileReportGenerator
-from report_generator.llm_report_generator import OpenRouterLLMProvider, ReportGenerator
-from report_generator.report_prompt import (
+from src.report_generator.generator import ReportGenerator as FileReportGenerator
+from src.report_generator.llm_report_generator import OpenRouterLLMProvider, ReportGenerator
+from src.report_generator.report_prompt import (
     ContradictionAnalysisPromptBuilder,
     ReportPromptBuilder,
 )
@@ -334,7 +334,6 @@ class TestRealReportGeneration:
 
         # Use a fast/cheap model for testing
         llm_provider = OpenRouterLLMProvider(
-            api_key=os.getenv("OPENROUTER_API_KEY"),
             model="openrouter/owl-alpha",  # free tier model
             temperature=0.3,
             max_tokens=500,  # limit tokens for faster/cheaper test
@@ -382,3 +381,7 @@ class TestRealReportGeneration:
         assert txt_path.exists()
         assert txt_path.stat().st_size > 0
         assert "contradiction" in report_data["report"].lower() or "analysis" in report_data["report"].lower()
+
+
+if __name__ == "__main__":
+    pytest.main()
