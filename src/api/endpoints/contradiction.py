@@ -1,24 +1,14 @@
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import File, Form, HTTPException, UploadFile, APIRouter
 
 from src.api.schemas.schemas import DetectionRequest, DetectionResponse
 from src.pipeline.contradiction import ContradictionDetectionPipeline
 from src.utils import save_upload_to_temp_file
 
-app = FastAPI(
-    title="Contradiction Detection API",
-    description="API для выявления фактологических противоречий",
-    version="0.1.0",
-)
+router = APIRouter()
 
-
-@app.get("/")
-async def healthcheck():
-    return {"status": "ok"}
-
-
-@app.post("/detect_contradictions", response_model=DetectionResponse)
+@router.post("/detect_contradictions", response_model=DetectionResponse)
 async def detect_contradictions(
     file: UploadFile = File(...),
     report_name: str | None = Form(None),
