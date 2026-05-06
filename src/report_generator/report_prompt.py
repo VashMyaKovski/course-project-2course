@@ -58,7 +58,7 @@ class ContradictionAnalysisPromptBuilder(ReportPromptBuilder):
     def _get_system_instruction(self) -> str:
         """Get the system instruction for the LLM."""
         return (
-            "You are an expert fact-checker and text analysis assistant. "
+            "You are an expert fact-checker and text analysis assistant. You must speak RUSSIAN! "
             "Your task is to analyze contradiction detection results and provide a comprehensive report. "
             "Focus on: "
             "1. Summary of contradictions found "

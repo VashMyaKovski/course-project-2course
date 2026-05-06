@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from loguru import logger
 
@@ -31,21 +31,6 @@ class ContradictionDetectionPipeline(BasePipeline):
         self.vector_db = VectorDBBuilder()
         self.report_gen = ReportGenerator()
 
-    @staticmethod
-    def _build_pairwise_contradiction_inputs(facts: List[str]) -> List[Dict[str, object]]:
-        payloads: List[Dict[str, object]] = []
-        for idx, main_fact in enumerate(facts):
-            other_facts = [fact for j, fact in enumerate(facts) if j != idx]
-            if not other_facts:
-                continue
-            payloads.append(
-                {
-                    "main_fact_what_is_going_to_be_checked": main_fact,
-                    "list_of_facts": other_facts,
-                }
-            )
-        return payloads
-
     def run(self, file_path: str, output_path: str = None) -> Dict[str, Any]:
         """
         Запуск полного цикла обработки одного файла.
@@ -75,25 +60,43 @@ class ContradictionDetectionPipeline(BasePipeline):
             facts = [fact.strip() for fact in facts if fact and fact.strip()]
             self.state["facts"] = facts
 
-            if not facts:
-                raise ValueError("No facts extracted from document chunks")
+            if len(facts) < 2:
+                raise ValueError("Need at least 2 extracted facts for contradiction detection")
 
-            # Шаг 4: Contradiction Detection (pairwise by fact)
-            self._log_step("contradiction_detection")
-            contradictions = [
-                self.detector.detect_all(payload)
-                for payload in self._build_pairwise_contradiction_inputs(facts)
-            ]
-            self.state["contradictions"] = contradictions
-
-            # Шаг 5: Embedding
+            # Шаг 4: Embedding
             self._log_step("embedding")
             embeddings = self.embedder.generate(sentences=facts)
             self.state["embeddings"] = embeddings
 
-            # Шаг 6: Vector DB Indexing
+            # Шаг 5: Vector DB Indexing
             self._log_step("vector_indexing")
-            self.vector_db.build(embeddings, facts)
+            indexed_records = self.vector_db.build(embeddings, facts)
+            self.state["indexed_records_count"] = len(indexed_records)
+
+            # Шаг 6: Retrieval + Contradiction Detection
+            self._log_step("retrieval_and_contradiction_detection")
+            contradictions = []
+            for record in indexed_records:
+                neighbors = self.vector_db.search_neighbors(
+                    record.embedding,
+                    exclude_point_ids=[str(record.point_id)],
+                )
+                neighbor_facts = [hit.text for hit in neighbors if hit.text.strip()]
+                if not neighbor_facts:
+                    continue
+
+                contradictions.append(
+                    self.detector.detect_all(
+                        {
+                            "main_fact_what_is_going_to_be_checked": record.text,
+                            "list_of_facts": neighbor_facts,
+                        }
+                    )
+                )
+
+            if not contradictions:
+                raise ValueError("No neighbor facts found for contradiction detection")
+            self.state["contradictions"] = contradictions
 
             # Шаг 7: Report Generation
             self._log_step("report_generation")

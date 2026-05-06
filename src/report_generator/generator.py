@@ -132,3 +132,12 @@ class ReportGenerator:
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         return f"report_{timestamp}"
+
+if __name__ == "__main__":
+    report_generator = ReportGenerator()
+
+    response = report_generator.generate(
+        contradictions=[]
+    )
+
+    print(response)
