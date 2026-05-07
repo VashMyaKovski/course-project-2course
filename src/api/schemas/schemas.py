@@ -16,4 +16,5 @@ class DetectionResponse(BaseModel):
     contradictions_count: int
     facts_count: int
     chunks_count: int
+    metadata: Dict[str, Any]
     contradictions: List[Dict[str, Any]]

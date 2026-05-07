@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Проверка противоречий</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown-dark.min.css" />
+  <link rel="stylesheet" href="/ui_contradiction/static/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>Проверка документа на противоречия</h1>
+      <p class="hero-lead">
+        Загрузите текстовый файл — пайплайн извлечёт факты, найдёт конфликты и сформирует отчёт в формате Markdown.
+      </p>
+    </header>
+
+    <section class="panel upload-panel">
+      <form id="analyze-form" class="form-grid">
+        <div class="field">
+          <label for="file">Файл документа</label>
+          <input id="file" name="file" type="file" required accept=".txt,.md,.text,text/plain" />
+        </div>
+        <div class="field">
+          <label for="report_name">Имя отчёта (необязательно)</label>
+          <input id="report_name" name="report_name" type="text" placeholder="например, audit_q1" autocomplete="off" />
+        </div>
+        <div class="field actions">
+          <button type="submit" id="submit-btn" class="btn primary">Запустить анализ</button>
+        </div>
+      </form>
+      <p id="hint" class="hint">
+        Запрос может занять несколько минут (LLM, эмбеддинги, векторный поиск).
+      </p>
+    </section>
+
+    <div id="status" class="status hidden" role="status"></div>
+    <div id="error" class="alert error hidden" role="alert"></div>
+
+    <section id="summary" class="panel summary hidden">
+      <h2>Сводка</h2>
+      <dl class="stats">
+        <div><dt>Фрагментов</dt><dd id="stat-chunks">—</dd></div>
+        <div><dt>Фактов</dt><dd id="stat-facts">—</dd></div>
+        <div><dt>Проверок противоречий</dt><dd id="stat-contradictions">—</dd></div>
+      </dl>
+      <details class="meta-details">
+        <summary>Метаданные файла</summary>
+        <pre id="metadata-json" class="metadata-pre"></pre>
+      </details>
+    </section>
+
+    <section id="report-section" class="panel report-panel hidden">
+      <div class="report-header">
+        <h2>Отчёт</h2>
+        <div id="report-meta" class="report-meta"></div>
+      </div>
+      <div id="report-body" class="markdown-body"></div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="/ui_contradiction/static/app.js"></script>
+</body>
+</html>
