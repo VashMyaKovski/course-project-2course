@@ -247,6 +247,7 @@ class TestFileReportGenerator:
         result = generator.generate(contradictions, report_name="test_report")
 
         assert result["status"] == "success"
+        assert result["report"] == "Test report content"
         assert Path(result["file_path"]).exists()
 
         # Verify file contents

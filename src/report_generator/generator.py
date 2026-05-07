@@ -67,6 +67,7 @@ class ReportGenerator:
             "timestamp": report_data["timestamp"],
             "model": report_data["model"],
             "num_contradictions_analyzed": report_data["num_contradictions"],
+            "report": report_data["report"],
         }
 
     def generate_batch(
