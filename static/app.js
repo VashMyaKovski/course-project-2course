@@ -5,22 +5,35 @@
   const errorEl = document.getElementById("error");
   const summaryEl = document.getElementById("summary");
   const reportSection = document.getElementById("report-section");
-  const reportBody = document.getElementById("report-body");
-  const reportMeta = document.getElementById("report-meta");
-  const metadataJson = document.getElementById("metadata-json");
+   const reportBody = document.getElementById("report-body");
+   const reportMeta = document.getElementById("report-meta");
+   const metadataJson = document.getElementById("metadata-json");
+   const downloadBtn = document.getElementById("download-btn");
 
   function show(el, showIt) {
     el.classList.toggle("hidden", !showIt);
   }
 
-  function resetOutput() {
-    show(errorEl, false);
-    show(summaryEl, false);
-    show(reportSection, false);
-    reportBody.innerHTML = "";
-    reportMeta.textContent = "";
-    metadataJson.textContent = "";
-  }
+   function resetOutput() {
+     show(errorEl, false);
+     show(summaryEl, false);
+     show(reportSection, false);
+     reportBody.innerHTML = "";
+     reportMeta.textContent = "";
+     metadataJson.textContent = "";
+   }
+
+   function downloadReport(reportText, filename = "report.txt") {
+     const blob = new Blob([reportText], { type: "text/plain;charset=utf-8" });
+     const url = URL.createObjectURL(blob);
+     const a = document.createElement("a");
+     a.href = url;
+     a.download = filename;
+     document.body.appendChild(a);
+     a.click();
+     document.body.removeChild(a);
+     URL.revokeObjectURL(url);
+   }
 
   function setLoading(loading) {
     submitBtn.disabled = loading;
@@ -104,28 +117,50 @@
         throw new Error("В ответе нет текста отчёта (поле report.report).");
       }
 
-      const html = marked.parse(md, { gfm: true, breaks: false });
-      reportBody.innerHTML = DOMPurify.sanitize(html);
+       const html = marked.parse(md, { gfm: true, breaks: false });
+       reportBody.innerHTML = DOMPurify.sanitize(html);
 
-      const parts = [];
-      if (report && report.model) {
-        parts.push(`Модель: ${report.model}`);
-      }
-      if (report && report.timestamp) {
-        parts.push(report.timestamp);
-      }
-      if (report && report.file_path) {
-        parts.push(`Файл: ${report.file_path}`);
-      }
-      reportMeta.textContent = parts.join(" · ");
+       const parts = [];
+       if (report && report.model) {
+         parts.push(`Модель: ${report.model}`);
+       }
+       if (report && report.timestamp) {
+         parts.push(report.timestamp);
+       }
+       if (report && report.file_path) {
+         parts.push(`Файл: ${report.file_path}`);
+       }
+       reportMeta.textContent = parts.join(" · ");
 
-      show(reportSection, true);
-      reportSection.scrollIntoView({ behavior: "smooth", block: "start" });
+       show(reportSection, true);
+       reportSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+       // Store report text for download
+       window.currentReportText = md;
+       // Generate filename from report name or timestamp
+       let downloadFilename = "report.txt";
+       if (report && report.file_path) {
+         const pathParts = report.file_path.split(/[/\\]/);
+         const filename = pathParts[pathParts.length - 1];
+         if (filename) {
+           downloadFilename = filename.replace(/\.json$/, ".txt");
+         }
+       }
+       window.currentDownloadFilename = downloadFilename;
     } catch (err) {
-      show(errorEl, true);
-      errorEl.textContent = err instanceof Error ? err.message : String(err);
-    } finally {
-      setLoading(false);
-    }
-  });
-})();
+       show(errorEl, true);
+       errorEl.textContent = err instanceof Error ? err.message : String(err);
+     } finally {
+       setLoading(false);
+     }
+   });
+
+   downloadBtn.addEventListener("click", () => {
+     if (window.currentReportText) {
+       downloadReport(window.currentReportText, window.currentDownloadFilename);
+     } else {
+       show(errorEl, true);
+       errorEl.textContent = "Отчёт не загружен. Сначала выполните анализ.";
+     }
+   });
+ })();

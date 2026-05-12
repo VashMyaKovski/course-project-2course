@@ -34,7 +34,7 @@ class OpenRouterLLMProvider(LLMProvider):
 
     DEFAULT_MODEL = "openrouter/owl-alpha"
     DEFAULT_TEMPERATURE = 0.7
-    DEFAULT_MAX_TOKENS = 2000
+    DEFAULT_MAX_TOKENS = 200000
     OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
     def __init__(
